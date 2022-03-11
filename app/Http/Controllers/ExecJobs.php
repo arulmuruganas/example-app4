@@ -30,7 +30,7 @@ class ExecJobs extends Controller
                 return ;
             }
         }
-        error_log('Creating');
+        // error_log('Creating');
         $obj = new ExecJobsMod();
         $obj->uuid = $uuid;
         $obj->job_command = $request->job_command;
