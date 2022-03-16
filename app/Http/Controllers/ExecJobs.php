@@ -5,31 +5,30 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\ExecJobsMod;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+
 
 class ExecJobs extends Controller
 {
-    public function get_all_data(){
-        $pizzas = Pizza::all();
-        var_dump($pizzas);
-    }
-
     public function create_job(Request $request){
-        $mandatory_params_job_creation = array('job_command','job_name','job_status','job_params');
-        $allowed_job_status = array('start','end');
+        // $mandatory_params_job_creation = array('job_command','job_name','job_status','job_params');
+        // $allowed_job_status = array('start','end');
+
+        $validator = Validator::make($request->all(), [
+            'job_command' => 'required|max:255',
+            'job_name' => 'required',
+            'job_status' => 'required|in:start,end',
+            'job_params' => 'required'
+        ]);
+ 
+        if ($validator->fails()) {
+            error_log($validator->errors());
+            return redirect('hello')
+                        ->withErrors($validator)
+                        ->withInput();
+        }
 
         $uuid = Str::uuid()->toString();
-
-        if (! $request->has($mandatory_params_job_creation)) {
-            error_log('Some of the params missing. Please check');
-            return;
-        }
-        if ($request->job_status){
-            if (! in_array($request->job_status, $allowed_job_status)) {
-                error_log('Invalid job_status');
-                redirect('http://127.0.0.1:8000/');
-                return ;
-            }
-        }
         // error_log('Creating');
         $obj = new ExecJobsMod();
         $obj->uuid = $uuid;
@@ -47,4 +46,30 @@ class ExecJobs extends Controller
         $obj->save();
         error_log('job created');
     }
+
+    public function _update_job($options){
+        error_log('Updating');
+        $jobs = ExecJobsMod::where('uuid', $options['uuid'])->update(['job_status'=>$options['status']]);
+        error_log($jobs);
+    }
+
+    public function update_job(Request $request){
+        $this->_update_job(['uuid'=>$request->uuid,'status'=>$request->job_status]);
+    }
+
+    public function submit_job(Request $request){
+        $uuid = $request->uuid;
+        error_log($uuid);
+        $jobs = ExecJobsMod::where('uuid',$uuid)->get();
+        error_log($jobs);
+        if ( count($jobs)){
+            foreach ($jobs as $job){
+                error_log('Execute_job_id: '.$job->uuid);
+            }
+        }else{
+            error_log('job not found');
+        }
+        // $this->_update_job(array('uuid'=>$uuid));
+    }
+
 }

@@ -20,9 +20,11 @@ Route::get('/hello', function () {
     return view('hello',['type'=>$param]);
 });
 
-Route::get('/control', 'GetData@sayhello');
+// Route::get('/control', 'GetData@sayhello');
+// Route::get('/control_db', 'GetData@get_db_data');
 
-Route::get('/control_db', 'GetData@get_db_data');
+Route::get('/create_job', 'ExecJobs@create_job');
 
-Route::get('/submit_job', 'ExecJobs@create_job');
+Route::get('/submit_job', 'ExecJobs@submit_job');
 
+Route::get('/update_job', 'ExecJobs@update_job');
