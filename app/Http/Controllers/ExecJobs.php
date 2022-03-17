@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\ExecJobsMod;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
-
+use App\ExecJobsMod;
+use App\jobs\SubmitAsyncJob;
 
 class ExecJobs extends Controller
 {
+    protected $allowed_job_status = array('pending', 'running', 'failed', 'succeeded');
     public function create_job(Request $request){
         // $mandatory_params_job_creation = array('job_command','job_name','job_status','job_params');
         // $allowed_job_status = array('start','end');
@@ -17,7 +18,7 @@ class ExecJobs extends Controller
         $validator = Validator::make($request->all(), [
             'job_command' => 'required|max:255',
             'job_name' => 'required',
-            'job_status' => 'required|in:start,end',
+            'job_status' => 'required|in:'.implode(',', $this->allowed_job_status),
             'job_params' => 'required'
         ]);
  
@@ -49,12 +50,12 @@ class ExecJobs extends Controller
 
     public function _update_job($options){
         error_log('Updating');
-        $jobs = ExecJobsMod::where('uuid', $options['uuid'])->update(['job_status'=>$options['status']]);
+        $jobs = ExecJobsMod::where('uuid', $options['uuid'])->update(['job_status'=>$options['job_status']]);
         error_log($jobs);
     }
 
     public function update_job(Request $request){
-        $this->_update_job(['uuid'=>$request->uuid,'status'=>$request->job_status]);
+        $this->_update_job(['uuid'=>$request->uuid,'job_status'=>$request->job_status]);
     }
 
     public function submit_job(Request $request){
@@ -65,11 +66,10 @@ class ExecJobs extends Controller
         if ( count($jobs)){
             foreach ($jobs as $job){
                 error_log('Execute_job_id: '.$job->uuid);
+                SubmitAsyncJob::dispatch($uuid);
             }
         }else{
             error_log('job not found');
         }
-        // $this->_update_job(array('uuid'=>$uuid));
     }
-
 }
