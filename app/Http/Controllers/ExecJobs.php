@@ -33,7 +33,9 @@ class ExecJobs extends Controller
     }
 
     public function update_job(Request $request){
-        $this->job_service->update_job($request);
+        $result = $this->validator->validateUpdateJobRequest($request);
+        if($result) return $result;
+        return $this->job_service->update_job($request);
     }
 
     public function job_list(Request $request){

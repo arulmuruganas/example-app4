@@ -11,6 +11,19 @@ class ExecJobsValidator {
     public function __construct(){
         // 
     }
+    
+    public function validateUpdateJobRequest($request){
+        $validator = Validator::make($request->all(), [
+            'uuid' => 'required|string|max:255',
+            'id' => 'required|integer',
+            'job_status' => 'required|in:'.implode(',', $this->allowed_job_status),
+
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+        return null;
+    }
 
     public function validateLogViewer($request){
         $validator = Validator::make($request->all(), [

@@ -26,14 +26,19 @@ class ExecJobService{
     }
 
     public function _update_job($options){
-        $allowed_fields_to_update = array('job_status', 'start_time', 'end_time', 'total_items', 'completed_items', 'error_info');
+        $allowed_fields_to_update = array('job_status', 'end_time', 'total_items', 'completed_items', 'error_info');
         $fields_to_update = array();
         foreach( $allowed_fields_to_update as $field){
             if (isset($options[$field])){
                 $fields_to_update[$field] = $options[$field];
             }
         }
-        $jobs = ExecJobsEntriesMod::where(['uuid'=> $options['uuid'],'id'=>$options['id']])->update($fields_to_update);
+        $result = ExecJobsEntriesMod::where(['uuid'=> $options['uuid'],'id'=>$options['id']])->update($fields_to_update);
+        if ( $result ){
+            return response()->json(['uuid'=>$options['uuid'],'id'=>$options['id']], 200);
+        }else{
+            return response()->json(['error'=>'Something wrong, No jobs updated'], 404);
+        }
     }
 
     public function create_run_entry($options){
@@ -46,7 +51,11 @@ class ExecJobService{
     }
 
     public function update_job($request){
-        $this->_update_job(['uuid'=>$request->uuid,'job_status'=>$request->job_status]);
+        $jobs = ExecJobsEntriesMod::where(['uuid'=> $request->uuid,'id'=>$request->id])->get();
+        if ( count($jobs) == 0){
+            return response()->json(['error'=>'Job not found'], 404);
+        }
+        return $this->_update_job(['uuid'=>$request->uuid,'id'=>$request->id,'job_status'=>$request->job_status]);
     }
 
     public function submit_job($request){
