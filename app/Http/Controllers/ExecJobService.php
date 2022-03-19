@@ -15,42 +15,34 @@ class ExecJobService{
 
     public function create_job($request){
         $uuid = Str::uuid()->toString();
-        // error_log('Creating');
         $obj = new ExecJobsMod();
         $obj->uuid = $uuid;
         $obj->job_command = $request->job_command;
         $obj->job_name = $request->job_name;
         $obj->job_params = $request->job_params;
         $obj->additional_info = $request->additional_info;
-        // $obj->job_status = $request->job_status;
-        // $obj->start_time = $request->start_time;
         $obj->save();
-        error_log('job created');
+        return response()->json(['uuid'=>$uuid], 200);
     }
 
     public function _update_job($options){
-        error_log('Updating');
-        if (isset($options['job_status']) && $options['job_status'] == 'STARTED'){
-            $obj = new ExecJobsEntriesMod();
-            $obj->uuid = $options['uuid'];
-            $obj->job_status = $options['job_status'];
-            $obj->save();
-            $last_id = $obj->id;
-            error_log('job entry created'.$last_id);
-            return $last_id;
-            // $jobs = ExecJobsEntriesMod::where(['uuid'=> $options['uuid'],'id'=>$last_id])->get();
-            // error_log($jobs);
-            // return $jobs[0];
-        }else{
-            $allowed_fields_to_update = array('job_status', 'start_time', 'end_time', 'total_items', 'completed_items', 'error_info');
-            $fields_to_update = array();
-            foreach( $allowed_fields_to_update as $field){
-                if (isset($options[$field])){
-                    $fields_to_update[$field] = $options[$field];
-                }
+        $allowed_fields_to_update = array('job_status', 'start_time', 'end_time', 'total_items', 'completed_items', 'error_info');
+        $fields_to_update = array();
+        foreach( $allowed_fields_to_update as $field){
+            if (isset($options[$field])){
+                $fields_to_update[$field] = $options[$field];
             }
-            $jobs = ExecJobsEntriesMod::where(['uuid'=> $options['uuid'],'id'=>$options['id']])->update($fields_to_update);
         }
+        $jobs = ExecJobsEntriesMod::where(['uuid'=> $options['uuid'],'id'=>$options['id']])->update($fields_to_update);
+    }
+
+    public function create_run_entry($options){
+        $obj = new ExecJobsEntriesMod();
+        $obj->uuid = $options['uuid'];
+        $obj->job_status = $options['job_status'];
+        $obj->save();
+        $last_id = $obj->id;
+        return $last_id;
     }
 
     public function update_job($request){
@@ -59,27 +51,54 @@ class ExecJobService{
 
     public function submit_job($request){
         $uuid = $request->uuid;
-        error_log($uuid);
         $jobs = ExecJobsMod::where('uuid',$uuid)->get();
-        $job_id = $this->_update_job(['uuid'=>$jobs[0]->uuid, 'job_status'=>'STARTED']);
+        if (count($jobs)){
+            $job = $jobs[0];
+            $job['id'] = $this->create_run_entry(['uuid'=>$job['uuid'], 'job_status'=>'STARTED']);
+            try{
+                $this->_update_job(['uuid'=>$job['uuid'], 'id'=>$job['id'], 'job_status'=>'IN_PROGRESS', 'start_time'=>DB::raw('NOW()')]);
+                SubmitAsyncJob::dispatchNow($job);
+                $this->_update_job(['uuid'=>$job['uuid'], 'id'=>$job['id'], 'job_status'=>'COMPLETED', 'end_time'=>DB::raw('NOW()')]);
+            }catch(Exception $e){
+                $errorMsg  = $e->getMessage();
+                $this->_update_job(['uuid'=>$job['uuid'], 'id'=>$job['id'], 'job_status'=>'FAILED', 'end_time'=>DB::raw('NOW()'), 'error_info'=>$errorMsg]);
+                error_log($e);
+            }
+            return response()->json(['uuid'=>$uuid, 'job_id'=>$job['id'], 'status'=>'Job is running'], 200);
+        }else{
+            return response()->json(['uuid'=>$uuid,'status'=>'uuid not found'], 200);
+        }
+    }
+
+    public function log_viewer($request){
+        $uuid = $request->uuid;
+        $jobs = ExecJobsEntriesMod::where('uuid',$uuid)->get();
+        $response = array();
         error_log($jobs);
         if (count($jobs)){
             foreach ($jobs as $job){
-                error_log('Execute_job_id: '.$job->uuid);
-                try{
-                    $this->_update_job(['uuid'=>$job->uuid, 'id'=>$job_id, 'job_status'=>'IN_PROGRESS', 'start_time'=>DB::raw('NOW()')]);
-                    SubmitAsyncJob::dispatch($uuid, $job_id);
-                    $this->_update_job(['uuid'=>$job->uuid, 'id'=>$job_id, 'job_status'=>'COMPLETED', 'end_time'=>DB::raw('NOW()')]);
-                }catch(Exception $e){
-                    $errorMsg  = $e->getMessage();
-                    $this->_update_job(['uuid'=>$job->uuid, 'id'=>$job_id, 'job_status'=>'FAILED', 'end_time'=>DB::raw('NOW()'), 'error_info'=>$errorMsg ]);
-                    error_log($e);
-                }
+                $response[] = $job;
             }
         }else{
             error_log('job not found');
         }
+        return response()->json($response);
+    }
+
+    public function job_list($request){
+        $jobs = ExecJobsMod::all();
+        $response = array();
+        error_log($jobs);
+        if (count($jobs)){
+            foreach ($jobs as $job){
+                $response[] = $job;
+            }
+        }else{
+            error_log('job not found');
+        }
+        return response()->json($response);
     }
 }
+
 
 ?>

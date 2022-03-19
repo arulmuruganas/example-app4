@@ -18,10 +18,9 @@ class SubmitAsyncJob implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($uuid, $id)
+    public function __construct($job)
     {
-        $this->uuid = $uuid;
-        $this->id = $id;
+        $this->job = $job;
     }
 
     /**
@@ -31,11 +30,12 @@ class SubmitAsyncJob implements ShouldQueue
      */
     public function handle()
     {
-        $uuid = $this->uuid;
-        error_log($uuid);
+        $job_details = $this->job;
+        error_log('Inside exec');
+        error_log($job_details);
         // TODO: Add code to update the job status and end_time
         // TODO: Querying job table twice one to validate uuid and other to get command to run, reduce it to one query
-        $jobs = ExecJobsMod::where('uuid',$uuid)->get();
-        error_log($jobs);
+        // $jobs = ExecJobsMod::where('uuid',$uuid)->get();
+        // error_log($jobs);
     } 
 }
