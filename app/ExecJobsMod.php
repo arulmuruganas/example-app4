@@ -8,3 +8,6 @@ class ExecJobsMod extends Model
 {
     protected $table = 'execute_jobs';
 }
+
+
+?>

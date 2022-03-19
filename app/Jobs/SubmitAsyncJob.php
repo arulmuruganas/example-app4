@@ -18,9 +18,10 @@ class SubmitAsyncJob implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(string $uuid)
+    public function __construct($uuid, $id)
     {
         $this->uuid = $uuid;
+        $this->id = $id;
     }
 
     /**
@@ -32,7 +33,6 @@ class SubmitAsyncJob implements ShouldQueue
     {
         $uuid = $this->uuid;
         error_log($uuid);
-        error_log('Hello');
         // TODO: Add code to update the job status and end_time
         // TODO: Querying job table twice one to validate uuid and other to get command to run, reduce it to one query
         $jobs = ExecJobsMod::where('uuid',$uuid)->get();

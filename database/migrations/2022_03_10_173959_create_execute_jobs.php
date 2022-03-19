@@ -20,13 +20,13 @@ class CreateExecuteJobs extends Migration
             $table->string('job_name');
             $table->string('job_params');
             $table->text('additional_info');
-            $table->string('job_status');
-            $table->string('start_time')->nullable();
-            $table->string('end_time')->nullable();
-            $table->integer('duration')->unsigned()->nullable();
-            $table->integer('total_items')->unsigned()->nullable();
-            $table->integer('completed_items')->unsigned()->nullable();
-            $table->text('error_info')->nullable();
+            // $table->string('job_status');
+            // $table->string('start_time')->nullable();
+            // $table->string('end_time')->nullable();
+            // $table->integer('duration')->unsigned()->nullable();
+            // $table->integer('total_items')->unsigned()->nullable();
+            // $table->integer('completed_items')->unsigned()->nullable();
+            // $table->text('error_info')->nullable();
             $table->timestamps();
         });
     }

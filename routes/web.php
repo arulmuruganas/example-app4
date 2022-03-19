@@ -28,3 +28,7 @@ Route::get('/create_job', 'ExecJobs@create_job');
 Route::get('/submit_job', 'ExecJobs@submit_job');
 
 Route::get('/update_job', 'ExecJobs@update_job');
+
+Route::get('/job_list', 'ExecJobs@job_list');
+
+Route::get('/log_viewer', 'ExecJobs@log_viewer');
