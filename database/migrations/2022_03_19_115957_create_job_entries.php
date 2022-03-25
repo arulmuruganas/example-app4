@@ -24,6 +24,7 @@ class CreateJobEntries extends Migration
             $table->integer('completed_items')->unsigned()->nullable();
             $table->text('error_info')->nullable();
             $table->timestamps();
+            $table->foreign('uuid')->references('uuid')->on('execute_jobs');
         });
     }
 

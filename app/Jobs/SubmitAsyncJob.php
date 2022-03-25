@@ -12,15 +12,15 @@ use Illuminate\Queue\SerializesModels;
 class SubmitAsyncJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    private $uuid;
+    public $job_command;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($job)
+    public function __construct($job_command)
     {
-        $this->job = $job;
+        $this->job_command = $job_command;
     }
 
     /**
@@ -30,12 +30,23 @@ class SubmitAsyncJob implements ShouldQueue
      */
     public function handle()
     {
-        $job_details = $this->job;
-        error_log('Inside exec');
-        error_log($job_details);
-        // TODO: Add code to update the job status and end_time
-        // TODO: Querying job table twice one to validate uuid and other to get command to run, reduce it to one query
-        // $jobs = ExecJobsMod::where('uuid',$uuid)->get();
-        // error_log($jobs);
-    } 
+        $job_details = $this->job_command;
+        exec($job_details['job_command'], $output, $return_var);
+        if ( $return_var == 1 ) {
+            throw new Exception('Job failed');
+        }else{
+            return True;
+        }
+    }
+
+    // public function failed(Exception $exception)
+    // {
+    //     // print"Error";
+    //     file_put_contents('debug.log', $exception->getMessage(),FILE_APPEND | LOCK_EX);
+    //     // print "Job failed";
+    //     // error_log('Failed');
+    //     // error_log($exception);
+    // }
 }
+
+?>

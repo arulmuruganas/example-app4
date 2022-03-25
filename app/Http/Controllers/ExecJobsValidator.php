@@ -49,7 +49,8 @@ class ExecJobsValidator {
         $validator = Validator::make($request->all(), [
             'job_command' => 'required|max:255',
             'job_name' => 'required',
-            'job_status' => 'required|in:'.implode(',', $this->allowed_job_status),
+            // 'job_status' => 'required|in:'.implode(',', $this->allowed_job_status),
+            'additional_info' => 'required',
             'job_params' => 'required'
         ]);
  

@@ -66,7 +66,7 @@ class ExecJobService{
             $job['id'] = $this->create_run_entry(['uuid'=>$job['uuid'], 'job_status'=>'STARTED']);
             try{
                 $this->_update_job(['uuid'=>$job['uuid'], 'id'=>$job['id'], 'job_status'=>'IN_PROGRESS', 'start_time'=>DB::raw('NOW()')]);
-                SubmitAsyncJob::dispatchNow($job);
+                SubmitAsyncJob::dispatch($job);
                 $this->_update_job(['uuid'=>$job['uuid'], 'id'=>$job['id'], 'job_status'=>'COMPLETED', 'end_time'=>DB::raw('NOW()')]);
             }catch(Exception $e){
                 $errorMsg  = $e->getMessage();
